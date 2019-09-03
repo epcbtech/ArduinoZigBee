@@ -1,5 +1,5 @@
 # ArduinoZigBee
-# contact: thesiscommunity@gmail.com
+# contact: epcbtech@gmail.com
 
 Example Note: 
 
@@ -7,7 +7,7 @@ Example Note:
 
 - Demo Gateway tích hơp các cảm biến Xiaomi zigbee (Door, PIR, Button, Temperature and Humidity, Ổ cắm)
 
-![alt text](https://github.com/thesiscommunity/ArduinoZigBee/blob/master/images/ZigBeeGate.jpg)
+![alt text](https://github.com/epcbtech/ArduinoZigBee/blob/master/images/ZigBeeGate.jpg)
 
 2. ArduinoZigBee/examples/ZigBeeRouter/ZigBeeRouter.ino
 - Demo 1 Node Router với các chức năng:
