@@ -46,7 +46,7 @@
 #define LATENCY_FAST_BEACONS			1
 #define LATENCY_SLOW_BEACONS			2
 
-#define DEFAULT_TX_POWER				10
+#define DEFAULT_TX_POWER				20
 #define ZNP_SOF							0xFE
 
 #define NORMAL_CMD_WAIT					150000

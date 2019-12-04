@@ -27,14 +27,11 @@ uint8_t zb_znp::update() {
 }
 
 int zb_znp::write(uint8_t* data, uint32_t len) {
-	for (int i = 0; i < len; i++) {
-		m_znp_stream->write(*(data + i));
-	}
-	return len;
+	m_znp_stream->write(data, len);
 }
 
 int zb_znp::read(uint8_t* data, uint32_t len) {
-	uint32_t counter = 40; //time out waiting for message is 4s.
+	uint32_t counter = 20; //time out waiting for message is 2s.
 
 	while(m_znp_stream->available() <= 0) {
 		delay(100);
@@ -415,7 +412,7 @@ uint8_t zb_znp::set_transmit_power(uint8_t tx_power_db) {
 	}
 
 	uint8_t znpresult = waiting_for_message(SYS_SET_TX_POWER | 0x6000);
-	if (znpresult == tx_power_db) {
+	if (znpresult) {
 		return ZNP_RET_OK;
 	}
 	return ZNP_RET_NG;
@@ -606,21 +603,17 @@ uint8_t zb_znp::set_callbacks(uint8_t cb) {
 
 uint8_t  zb_znp::start_coordinator(uint8_t opt) {
 	uint8_t znpResult;
-	uint8_t rx_buffer[RX_BUFFER_SIZE];
-	int rx_read_len;
 
 	//Serial.print("start_coordinator\n");
+
+	hard_reset();
+
 	znpResult = soft_reset();
 	if (znpResult == ZNP_RET_NG) {
 		//Serial.print("ERROR: reset ZNP \n");
 		return znpResult;
 	}
-
-	znpResult = zb_read_configuration(ZCD_NV_PANID, rx_buffer, (uint32_t*) &rx_read_len);
-
-	if (rx_buffer[3] == 0xFF && rx_buffer[4] == 0xFF) {
-		opt = 1;
-	}
+	//Serial.print("soft_reset\n");
 
 	if (opt == 0) {
 		//Serial.print("Skipping startup option !\n");
