@@ -67,7 +67,7 @@ void setup() {
 	 * (opt = 2)
 	 * to auto start router.
 	 */
-	if (zigbee_network.start_router(2) == 0) {
+	if (zigbee_network.start_router(1) == 0) {
 		Serial.println("start router successfully");
 	}
 	else {

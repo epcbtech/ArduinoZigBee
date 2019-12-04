@@ -91,51 +91,23 @@ int zb_znp::zigbee_message_handler(zigbee_msg_t& zigbee_msg) {
 		Serial.println("AF_INCOMING_MSG");
 
 #if defined (DBG_ZB_FRAME)
-		char buf[9];
-		char buf1[18];
-		Serial.print("group_id: ");
-		sprintf(buf, "%04x", st_af_incoming_msg->group_id);
-		Serial.println(buf);
-
-		Serial.print("cluster_id: ");
-		sprintf(buf, "%04x", st_af_incoming_msg->cluster_id);
-		Serial.println(buf);
-
-		Serial.print("src_addr: ");
-		sprintf(buf, "%04x", st_af_incoming_msg->src_addr);
-		Serial.println(buf);
-
-		Serial.print("src_endpoint: ");
-		Serial.println(st_af_incoming_msg->src_endpoint, HEX);
-
-		Serial.print("dst_endpoint: ");
-		Serial.println(st_af_incoming_msg->dst_endpoint, HEX);
-
-		Serial.print("was_broadcast: ");
-		Serial.println(st_af_incoming_msg->was_broadcast, HEX);
-
-		Serial.print("link_quality: ");
-		Serial.println(st_af_incoming_msg->link_quality, HEX);
-
-		Serial.print("security_use: ");
-		Serial.println(st_af_incoming_msg->security_use, HEX);
-
-		Serial.print("time_stamp: ");
-		sprintf(buf1, "%08x", st_af_incoming_msg->time_stamp);
-		Serial.println(buf1);
-
-		Serial.print("trans_seq_num: ");
-		Serial.println(st_af_incoming_msg->trans_seq_num, HEX);
-
-		Serial.print("len: ");
-		Serial.println(st_af_incoming_msg->len, HEX);
-
+		Serial.print("group_id: "); Serial.println(st_af_incoming_msg->group_id, HEX);
+		Serial.print("cluster_id: "); Serial.println(st_af_incoming_msg->cluster_id, HEX);
+		Serial.print("src_addr: "); Serial.println(st_af_incoming_msg->src_addr, HEX);
+		Serial.print("src_endpoint: "); Serial.println(st_af_incoming_msg->src_endpoint, HEX);
+		Serial.print("dst_endpoint: "); Serial.println(st_af_incoming_msg->dst_endpoint, HEX);
+		Serial.print("was_broadcast: "); Serial.println(st_af_incoming_msg->was_broadcast, HEX);
+		Serial.print("link_quality: "); Serial.println(st_af_incoming_msg->link_quality, HEX);
+		Serial.print("security_use: "); Serial.println(st_af_incoming_msg->security_use, HEX);
+		Serial.print("time_stamp: "); Serial.println(st_af_incoming_msg->time_stamp, HEX);
+		Serial.print("trans_seq_num: "); Serial.println(st_af_incoming_msg->trans_seq_num, HEX);
+		Serial.print("len: "); Serial.println(st_af_incoming_msg->len);
 		Serial.print("data: ");
 		for (int i = 0 ; i < st_af_incoming_msg->len ; i++) {
 			Serial.print(st_af_incoming_msg->payload[i], HEX);
 			Serial.print(" ");
 		}
-		Serial.println(" ");
+		Serial.println("");
 #endif
 
 		switch (st_af_incoming_msg->cluster_id) {
@@ -230,8 +202,8 @@ void setup() {
 	znp_serial.begin(115200);
 
 	/* Khởi động coodinatior */
-	Serial.println("\nstart_coordinator(0)");
-	if (zigbee_network.start_coordinator(0) == 0) {
+	Serial.println("\nstart_coordinator(1)");
+	if (zigbee_network.start_coordinator(1) == 0) {
 		Serial.println("OK");
 	}
 	else {

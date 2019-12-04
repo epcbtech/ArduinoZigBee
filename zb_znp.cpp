@@ -4,8 +4,6 @@
 #include "zb_znp.h"
 #include <Arduino.h>
 
-#define RX_BUFFER_SIZE		256
-
 uint8_t zb_znp::get_sequence_send() {
 	if (m_sequence_send == 0xFF) {
 		m_sequence_send = 0;
@@ -15,52 +13,23 @@ uint8_t zb_znp::get_sequence_send() {
 	return m_sequence_send;
 }
 
-int update_read_len;
-uint8_t zb_znp::update() {
-	update_read_len = m_znp_stream->available();
-	if (update_read_len) {
-		for (int i = 0; i < update_read_len; i++) {
+int zb_znp::update() {
+	int _len = m_znp_stream->available();
+	if (_len) {
+		for (int i = 0; i < _len; i++) {
 			m_znp_buf[i] = m_znp_stream->read();
 		}
-		znp_frame_parser(m_znp_buf, update_read_len);
+		znp_frame_parser(m_znp_buf, _len);
 	}
+	return _len;
 }
 
 int zb_znp::write(uint8_t* data, uint32_t len) {
-	m_znp_stream->write(data, len);
+	return (int)m_znp_stream->write(data, len);
 }
 
 int zb_znp::read(uint8_t* data, uint32_t len) {
-	uint32_t counter = 20; //time out waiting for message is 2s.
-
-	while(m_znp_stream->available() <= 0) {
-		delay(100);
-		if (counter-- == 0) {
-			break;
-		}
-	}
-
-	int r_len = m_znp_stream->available();
-	int r_len_sum = 0;
-	int r_c;
-
-	if (r_len > len) {
-		return -1;
-	}
-
-	while (r_len > 0) {
-		for (int i = r_len_sum; i < (r_len_sum + r_len); i++) {
-			r_c = (int)m_znp_stream->read();
-			if (r_c >= 0) {
-				*(data + i) = (uint8_t)r_c;
-			}
-		}
-
-		r_len_sum += r_len;
-		r_len = m_znp_stream->available();
-	}
-
-	return r_len_sum;
+	return (int)m_znp_stream->readBytes(data, len);
 }
 
 uint8_t zb_znp::set_tc_require_key_exchange(uint8_t bdb_trust_center_require_key_exchange) {
@@ -88,7 +57,7 @@ uint8_t zb_znp::set_tc_require_key_exchange(uint8_t bdb_trust_center_require_key
 
 uint8_t zb_znp::znp_frame_parser(uint8_t* data, uint32_t len) {
 	uint8_t ch, ret = ZNP_PARSER_IDLE;
-	int rx_remain;
+	uint32_t rx_remain;
 
 	while (len) {
 		ch = *data++;
@@ -185,61 +154,61 @@ uint8_t zb_znp::znp_frame_calc_fcs(zigbee_msg_t& zigbee_msg) {
 }
 
 uint8_t zb_znp::waiting_for_message(uint16_t cmd) {
-	uint8_t rx_buffer[RX_BUFFER_SIZE];
-	int rx_read_len;
-	int retry_time = 10;
+	uint8_t _rx_buffer[ZNP_BUF_SIZE];
+	int _rx_read_len;
+	int _retry_time = 3;
 	znp_frame.zigbee_msg_denied_handle = 1;
-	while (retry_time > 0) {
-		rx_read_len = read(rx_buffer, RX_BUFFER_SIZE);
-		if (znp_frame_parser(rx_buffer, rx_read_len) == ZNP_PARSER_DONE) {
+	while (_retry_time > 0) {
+		_rx_read_len = read(_rx_buffer, ZNP_BUF_SIZE);
+		if (znp_frame_parser(_rx_buffer, _rx_read_len) == ZNP_PARSER_DONE) {
 			if (BUILD_UINT16(znp_frame.zigbee_msg.cmd1, znp_frame.zigbee_msg.cmd0) == cmd) {
 				znp_frame.zigbee_msg_denied_handle = 0;
 				return znp_frame.zigbee_msg.data[0];
 			}
 		}
-		retry_time--;
+		_retry_time--;
 	}
 	znp_frame.zigbee_msg_denied_handle = 0;
 	return ZNP_RET_NG;
 }
 
 uint8_t zb_znp::waiting_for_status(uint16_t cmd, uint8_t status) {
-	uint8_t rx_buffer[RX_BUFFER_SIZE];
-	int rx_read_len;
-	int retry_time = 10;
+	uint8_t _rx_buffer[ZNP_BUF_SIZE];
+	int _rx_read_len;
+	int _retry_time = 3;
 	znp_frame.zigbee_msg_denied_handle = 1;
-	while (retry_time > 0) {
-		rx_read_len = read(rx_buffer, RX_BUFFER_SIZE);
-		if (znp_frame_parser(rx_buffer, rx_read_len) == ZNP_PARSER_DONE) {
+	while (_retry_time > 0) {
+		_rx_read_len = read(_rx_buffer, ZNP_BUF_SIZE);
+		if (znp_frame_parser(_rx_buffer, _rx_read_len) == ZNP_PARSER_DONE) {
 			if (BUILD_UINT16(znp_frame.zigbee_msg.cmd1, znp_frame.zigbee_msg.cmd0) == cmd &&
 					znp_frame.zigbee_msg.data[0] == status) {
 				znp_frame.zigbee_msg_denied_handle = 0;
 				return znp_frame.zigbee_msg.data[0];
 			}
 		}
-		retry_time--;
+		_retry_time--;
 	}
 	znp_frame.zigbee_msg_denied_handle = 0;
 	return ZNP_RET_NG;
 }
 
-uint8_t zb_znp::get_msg_return(uint16_t cmd, uint8_t status, uint8_t* rx_buffer, uint32_t* len) {
-	int rx_read_len;
-	int retry_time = 10;
+uint8_t zb_znp::get_msg_return(uint16_t cmd, uint8_t status, uint8_t* _rx_buffer, uint32_t* len) {
+	int _rx_read_len;
+	int _retry_time = 3;
 	znp_frame.zigbee_msg_denied_handle = 1;
-	while (retry_time > 0) {
-		rx_read_len = read(rx_buffer, RX_BUFFER_SIZE);
-		if (znp_frame_parser(rx_buffer, rx_read_len) == ZNP_PARSER_DONE) {
+	while (_retry_time > 0) {
+		_rx_read_len = read(_rx_buffer, ZNP_BUF_SIZE);
+		if (znp_frame_parser(_rx_buffer, _rx_read_len) == ZNP_PARSER_DONE) {
 			if (BUILD_UINT16(znp_frame.zigbee_msg.cmd1, znp_frame.zigbee_msg.cmd0) == cmd &&
 					znp_frame.zigbee_msg.data[0] == status) {
-				memcpy(rx_buffer, znp_frame.zigbee_msg.data, znp_frame.zigbee_msg.len);
+				memcpy(_rx_buffer, znp_frame.zigbee_msg.data, znp_frame.zigbee_msg.len);
 				*len = znp_frame.zigbee_msg.len;
 
 				znp_frame.zigbee_msg_denied_handle = 0;
 				return ZNP_RET_OK;
 			}
 		}
-		retry_time--;
+		_retry_time--;
 	}
 	znp_frame.zigbee_msg_denied_handle = 0;
 	return ZNP_RET_NG;
@@ -743,7 +712,7 @@ uint8_t  zb_znp::start_coordinator(uint8_t opt) {
 
 uint8_t zb_znp::start_router(uint8_t opt) {
 	uint8_t znpCmdExeResult;
-	uint8_t zb_read_configuration_buf[RX_BUFFER_SIZE];
+	uint8_t zb_read_configuration_buf[ZNP_BUF_SIZE];
 	int zb_read_configuration_buf_len;
 
 	//Serial.print("start_router()\n");
@@ -752,7 +721,7 @@ uint8_t zb_znp::start_router(uint8_t opt) {
 
 	znpCmdExeResult = soft_reset();
 	if (znpCmdExeResult == ZNP_RET_NG) {
-		Serial.print("[Start Router] ERR: soft_reset()\n");
+		//Serial.print("[Start Router] ERR: soft_reset()\n");
 		return znpCmdExeResult;
 	}
 	//Serial.print("[Start Router] OK: soft_reset()\n");
@@ -781,7 +750,7 @@ uint8_t zb_znp::start_router(uint8_t opt) {
 			if (i == 0x01 || i == 0x0A) {
 				znpCmdExeResult = af_register_generic_application(i);
 				if (znpCmdExeResult != ZNP_RET_OK) {
-					Serial.print("[Start Router] ERR: af_register_generic_application\n");
+					//Serial.print("[Start Router] ERR: af_register_generic_application\n");
 					return znpCmdExeResult;
 				}
 			}

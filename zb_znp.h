@@ -221,7 +221,7 @@ public:
 
 	znp_frame_t znp_frame;
 
-	uint8_t update();
+	int update();
 
 	int write(uint8_t*, uint32_t);
 	int read(uint8_t*, uint32_t);
@@ -275,8 +275,8 @@ public:
 	uint8_t znp_frame_parser(uint8_t* data, uint32_t len);
 
 private:
-#define MAX_LEN_ZNP		150
-	uint8_t m_znp_buf[MAX_LEN_ZNP];
+#define ZNP_BUF_SIZE		128
+	uint8_t m_znp_buf[ZNP_BUF_SIZE];
 
 	Stream* m_znp_stream;
 	uint8_t m_sequence_send;

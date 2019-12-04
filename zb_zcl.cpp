@@ -47,6 +47,53 @@ static afIncomingMSGPacket_t *rawAFMsg = (afIncomingMSGPacket_t *) NULL;
 static void *zclParseInReadRspCmd(zclParseCmd_t *pCmd);
 static void *zclParseInReportCmd(zclParseCmd_t *pCmd);
 
+/*********************************************************************
+ * @fn      zclParseHdr
+ *
+ * @brief   Parse header of the ZCL format
+ *
+ * @param   hdr - place to put the frame control information
+ * @param   pData - incoming buffer to parse
+ *
+ * @return  pointer past the header
+ */
+uint8_t *zclParseHdr( zclFrameHdr_t *hdr, uint8_t *pData )
+{
+	// Clear the header
+	memset( (uint8_t *)hdr, 0, sizeof ( zclFrameHdr_t ) );
+
+	// Parse the Frame Control
+	hdr->fc.type = zcl_FCType( *pData );
+	hdr->fc.manuSpecific = zcl_FCManuSpecific( *pData ) ? 1 : 0;
+	if ( zcl_FCDirection( *pData ) )
+	{
+		hdr->fc.direction = ZCL_FRAME_SERVER_CLIENT_DIR;
+	}
+	else
+	{
+		hdr->fc.direction = ZCL_FRAME_CLIENT_SERVER_DIR;
+	}
+
+	hdr->fc.disableDefaultRsp = zcl_FCDisableDefaultRsp( *pData ) ? 1 : 0;
+	pData++;  // move past the frame control field
+
+	// parse the manfacturer code
+	if ( hdr->fc.manuSpecific )
+	{
+		hdr->manuCode = BUILD_UINT16( pData[0], pData[1] );
+		pData += 2;
+	}
+
+	// parse the Transaction Sequence Number
+	hdr->transSeqNum = *pData++;
+
+	// parse the Cluster's command ID
+	hdr->commandID = *pData++;
+
+	// Should point to the frame payload
+	return ( pData );
+}
+
 static void *zclParseInReadRspCmd(zclParseCmd_t *pCmd) {
 	zclReadRspCmd_t *readRspCmd;
 	uint8_t *pBuf = pCmd->pData;
