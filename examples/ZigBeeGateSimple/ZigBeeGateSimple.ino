@@ -104,8 +104,8 @@ void setup() {
 	znp_serial.begin(115200);
 
 	/* Khởi động coodinatior */
-	Serial.println("\nstart_coordinator(0)");
-	if (zigbee_network.start_coordinator(0) == 0) {
+	Serial.println("\nstart_coordinator(1)");
+	if (zigbee_network.start_coordinator(1) == 0) {
 		Serial.println("OK");
 	}
 	else {
