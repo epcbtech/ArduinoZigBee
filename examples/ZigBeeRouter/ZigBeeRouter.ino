@@ -107,6 +107,7 @@ int zb_znp::zigbee_message_handler(zigbee_msg_t& zigbee_msg) {
 void setup() {
 	Serial.begin(115200);
 	znp_serial.begin(115200);
+	znp_serial.setTimeout(100);
 
 	/* Khởi động router */
 	Serial.println("\nstart_router");

@@ -5,6 +5,11 @@
 #include "zb_zcl.h"
 #include "zb_defs.h"
 
+#if defined(TASK_ZIGBEE_EN)
+#include "app.h"
+#include "task_list.h"
+#endif
+
 /*********************************************************************
  * MACROS
  */
@@ -362,29 +367,20 @@ zclProcMsgStatus_t zcl_ProcessMessageMSG(afIncomingMSGPacket_t *pkt) {
 				for (int i = 0; i < readRspCmd->numAttr; i++) {
 					zclReadRspStatus_t *statusRec = &(readRspCmd->attrList[i]);
 					if (statusRec->status == ZCL_STATUS_SUCCESS) {
-						zclOutgoingMsg_t outgoingMsg;
-						outgoingMsg.short_addr = pkt->src_addr;
-						outgoingMsg.cluster_id = pkt->cluster_id;
-						outgoingMsg.group_id = pkt->group_id;
-						outgoingMsg.cmd = inMsg.hdr.commandID;
-						outgoingMsg.attrID = statusRec->attrID;
-						outgoingMsg.dataType = statusRec->dataType;
-						outgoingMsg.dataLen = statusRec->dataLen;
-						outgoingMsg.data = statusRec->data;
-
-						uint8_t len = sizeof(zclOutgoingMsg_t) + outgoingMsg.dataLen;
-						uint8_t* str_data = (uint8_t *) malloc(len);
-
-						memcpy(str_data, (uint8_t*) &outgoingMsg, sizeof(zclOutgoingMsg_t));
-						str_data += sizeof(zclOutgoingMsg_t);
-						memcpy(str_data, statusRec->data, statusRec->dataLen);
-
-						str_data -= sizeof(zclOutgoingMsg_t);
-
-						// TODO: Handle data message incoming.
-
-						free(str_data);
-
+#if defined(TASK_ZIGBEE_EN)
+						zclOutgoingMsg_t* pOutgoingMsg = (zclOutgoingMsg_t*)ak_malloc(sizeof(zclOutgoingMsg_t));
+						pOutgoingMsg->short_addr = pkt->src_addr;
+						pOutgoingMsg->cluster_id = pkt->cluster_id;
+						pOutgoingMsg->group_id = pkt->group_id;
+						pOutgoingMsg->cmd = inMsg.hdr.commandID;
+						pOutgoingMsg->attrID = statusRec->attrID;
+						pOutgoingMsg->dataType = statusRec->dataType;
+						pOutgoingMsg->dataLen = statusRec->dataLen;
+						pOutgoingMsg->data = (uint8_t*)ak_malloc(statusRec->dataLen);
+						memcpy(pOutgoingMsg->data, statusRec->data, statusRec->dataLen);
+						task_post_common_msg(AC_TASK_ZIGBEE_ID, AC_ZIGBEE_ZCL_CMD_HANDLER, (uint8_t*)&pOutgoingMsg, sizeof(zclOutgoingMsg_t*));
+#endif
+						break;
 					} else {
 						// statusRec->status?
 					}
@@ -420,33 +416,22 @@ zclProcMsgStatus_t zcl_ProcessMessageMSG(afIncomingMSGPacket_t *pkt) {
 				zclReportCmd_t *reportCmd;
 				reportCmd = (zclReportCmd_t *) inMsg.attrCmd;
 				for (int i = 0; i < reportCmd->numAttr; i++) {
+#if defined(TASK_ZIGBEE_EN)
 					zclReport_t *reportRec = &(reportCmd->attrList[i]);
-
-					zclOutgoingMsg_t outgoingMsg; //data send to mqtt
-					outgoingMsg.short_addr = pkt->src_addr;
-					outgoingMsg.cluster_id = pkt->cluster_id;
-					outgoingMsg.group_id = pkt->group_id;
-					outgoingMsg.cmd = inMsg.hdr.commandID;
-					outgoingMsg.attrID = reportRec->attrID;
-					outgoingMsg.dataType = reportRec->dataType;
-					outgoingMsg.dataLen = reportRec->dataLen;
-					outgoingMsg.data = reportRec->Data;
-
-					uint8_t len = sizeof(zclOutgoingMsg_t) + outgoingMsg.dataLen;
-					uint8_t* str_data = (uint8_t *) malloc(len);
-
-					memcpy(str_data, (uint8_t*) &outgoingMsg, sizeof(zclOutgoingMsg_t));
-					str_data += sizeof(zclOutgoingMsg_t);
-					memcpy(str_data, reportRec->Data, reportRec->dataLen);
-
-					str_data -= sizeof(zclOutgoingMsg_t);
-
-					// TODO: Handle data message incoming.
-
-					free(str_data);
-
+					zclOutgoingMsg_t* pOutgoingMsg = (zclOutgoingMsg_t*)ak_malloc(sizeof(zclOutgoingMsg_t));
+					pOutgoingMsg->short_addr = pkt->src_addr;
+					pOutgoingMsg->cluster_id = pkt->cluster_id;
+					pOutgoingMsg->group_id = pkt->group_id;
+					pOutgoingMsg->cmd = inMsg.hdr.commandID;
+					pOutgoingMsg->attrID = reportRec->attrID;
+					pOutgoingMsg->dataType = reportRec->dataType;
+					pOutgoingMsg->dataLen = reportRec->dataLen;
+					pOutgoingMsg->data = (uint8_t*)ak_malloc(reportRec->dataLen);
+					memcpy(pOutgoingMsg->data, reportRec->Data, reportRec->dataLen);
+					task_post_common_msg(AC_TASK_ZIGBEE_ID, AC_ZIGBEE_ZCL_CMD_HANDLER, (uint8_t*)&pOutgoingMsg, sizeof(zclOutgoingMsg_t*));
+#endif
+					break;
 				}
-
 			}
 
 			// Free the buffer
@@ -471,28 +456,20 @@ zclProcMsgStatus_t zcl_ProcessMessageMSG(afIncomingMSGPacket_t *pkt) {
 		case ZCL_CMD_READ: {
 			if (pkt->cluster_id == ZCL_CLUSTER_ID_SS_IAS_ZONE) {
 				if (inMsg.pDataLen == 6) {
-					zclOutgoingMsg_t outgoingMsg; //data send to mqtt
-					outgoingMsg.short_addr = pkt->src_addr;
-					outgoingMsg.cluster_id = pkt->cluster_id;
-					outgoingMsg.group_id = pkt->group_id;
-					outgoingMsg.cmd = inMsg.hdr.commandID;
-					outgoingMsg.attrID = 0xFFFF;
-					outgoingMsg.dataType = ZCL_DATATYPE_UNKNOWN;
-					outgoingMsg.dataLen = inMsg.pDataLen;
-					outgoingMsg.data = inMsg.pData;
-
-					uint8_t len = sizeof(zclOutgoingMsg_t) + outgoingMsg.dataLen;
-					uint8_t* str_data = (uint8_t *) malloc(len);
-
-					memcpy(str_data, (uint8_t*) &outgoingMsg, sizeof(zclOutgoingMsg_t));
-					str_data += sizeof(zclOutgoingMsg_t);
-					memcpy(str_data, inMsg.pData, inMsg.pDataLen);
-
-					str_data -= sizeof(zclOutgoingMsg_t);
-
-					// TODO: Handle data message incoming.
-
-					free(str_data);
+#if defined(TASK_ZIGBEE_EN)
+					zclOutgoingMsg_t* pOutgoingMsg = (zclOutgoingMsg_t*)ak_malloc(sizeof(zclOutgoingMsg_t));
+					pOutgoingMsg->short_addr = pkt->src_addr;
+					pOutgoingMsg->cluster_id = pkt->cluster_id;
+					pOutgoingMsg->group_id = pkt->group_id;
+					pOutgoingMsg->cmd = inMsg.hdr.commandID;
+					pOutgoingMsg->attrID = 0xFFFF;
+					pOutgoingMsg->dataType = ZCL_DATATYPE_UNKNOWN;
+					pOutgoingMsg->dataLen = inMsg.pDataLen;
+					pOutgoingMsg->data = (uint8_t*)ak_malloc(inMsg.pDataLen);
+					memcpy(pOutgoingMsg->data, inMsg.pData, inMsg.pDataLen);
+					task_post_common_msg(AC_TASK_ZIGBEE_ID, AC_ZIGBEE_ZCL_CMD_HANDLER, (uint8_t*)&pOutgoingMsg, sizeof(zclOutgoingMsg_t*));
+#endif
+					break;
 				}
 
 			}

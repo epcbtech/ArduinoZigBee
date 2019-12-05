@@ -4,6 +4,10 @@
 #include "zb_znp.h"
 #include <Arduino.h>
 
+#if defined(TASK_ZIGBEE_EN)
+#include "xprintf.h"
+#endif
+
 uint8_t zb_znp::get_sequence_send() {
 	if (m_sequence_send == 0xFF) {
 		m_sequence_send = 0;
@@ -156,7 +160,7 @@ uint8_t zb_znp::znp_frame_calc_fcs(zigbee_msg_t& zigbee_msg) {
 uint8_t zb_znp::waiting_for_message(uint16_t cmd) {
 	uint8_t _rx_buffer[ZNP_BUF_SIZE];
 	int _rx_read_len;
-	int _retry_time = 3;
+	int _retry_time = 50;
 	znp_frame.zigbee_msg_denied_handle = 1;
 	while (_retry_time > 0) {
 		_rx_read_len = read(_rx_buffer, ZNP_BUF_SIZE);
@@ -167,6 +171,7 @@ uint8_t zb_znp::waiting_for_message(uint16_t cmd) {
 			}
 		}
 		_retry_time--;
+		//xprintf("waiting_for_message _retry_time: 0x%04X %d\n", cmd,  _retry_time);
 	}
 	znp_frame.zigbee_msg_denied_handle = 0;
 	return ZNP_RET_NG;
@@ -175,7 +180,7 @@ uint8_t zb_znp::waiting_for_message(uint16_t cmd) {
 uint8_t zb_znp::waiting_for_status(uint16_t cmd, uint8_t status) {
 	uint8_t _rx_buffer[ZNP_BUF_SIZE];
 	int _rx_read_len;
-	int _retry_time = 3;
+	int _retry_time = 50;
 	znp_frame.zigbee_msg_denied_handle = 1;
 	while (_retry_time > 0) {
 		_rx_read_len = read(_rx_buffer, ZNP_BUF_SIZE);
@@ -187,6 +192,7 @@ uint8_t zb_znp::waiting_for_status(uint16_t cmd, uint8_t status) {
 			}
 		}
 		_retry_time--;
+		//xprintf("waiting_for_status _retry_time: 0x%04X %d\n", cmd,  _retry_time);
 	}
 	znp_frame.zigbee_msg_denied_handle = 0;
 	return ZNP_RET_NG;
@@ -194,7 +200,7 @@ uint8_t zb_znp::waiting_for_status(uint16_t cmd, uint8_t status) {
 
 uint8_t zb_znp::get_msg_return(uint16_t cmd, uint8_t status, uint8_t* _rx_buffer, uint32_t* len) {
 	int _rx_read_len;
-	int _retry_time = 3;
+	int _retry_time = 50;
 	znp_frame.zigbee_msg_denied_handle = 1;
 	while (_retry_time > 0) {
 		_rx_read_len = read(_rx_buffer, ZNP_BUF_SIZE);
@@ -209,6 +215,7 @@ uint8_t zb_znp::get_msg_return(uint16_t cmd, uint8_t status, uint8_t* _rx_buffer
 			}
 		}
 		_retry_time--;
+		//xprintf("get_msg_return _retry_time: 0x%04X %d\n", cmd,  _retry_time);
 	}
 	znp_frame.zigbee_msg_denied_handle = 0;
 	return ZNP_RET_NG;
@@ -265,6 +272,7 @@ uint8_t zb_znp::soft_reset() {
 	if (write(m_znp_buf, i) < 0) {
 		return ZNP_RET_NG;
 	}
+
 	return waiting_for_message(SYS_RESET_IND);
 }
 
