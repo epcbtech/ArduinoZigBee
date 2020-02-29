@@ -583,7 +583,7 @@ uint8_t  zb_znp::start_coordinator(uint8_t opt) {
 
 	//Serial.print("start_coordinator\n");
 
-	hard_reset();
+	//hard_reset();
 
 	znpResult = soft_reset();
 	if (znpResult == ZNP_RET_NG) {
@@ -725,7 +725,7 @@ uint8_t zb_znp::start_router(uint8_t opt) {
 
 	//Serial.print("start_router()\n");
 
-	hard_reset();
+	//hard_reset();
 
 	znpCmdExeResult = soft_reset();
 	if (znpCmdExeResult == ZNP_RET_NG) {
