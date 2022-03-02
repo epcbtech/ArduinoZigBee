@@ -19,36 +19,34 @@ SoftwareSerial znp_serial(2, 3);
 zb_znp zigbee_network(&znp_serial);
 
 void bytetoHexChar(uint8_t ubyte, uint8_t *uHexChar) {
-    uHexChar[1] = ((ubyte & 0x0F) < 10) ? ((ubyte & 0x0F) + '0') : (((ubyte & 0x0F) - 10) + 'A');
-    uHexChar[0] = ((ubyte >> 4 & 0x0F) < 10) ? ((ubyte >> 4 & 0x0F) + '0') : (((ubyte >> 4 & 0x0F) - 10) + 'A');
+	uHexChar[1] = ((ubyte & 0x0F) < 10) ? ((ubyte & 0x0F) + '0') : (((ubyte & 0x0F) - 10) + 'A');
+	uHexChar[0] = ((ubyte >> 4 & 0x0F) < 10) ? ((ubyte >> 4 & 0x0F) + '0') : (((ubyte >> 4 & 0x0F) - 10) + 'A');
 }
 
 void bytestoHexChars(uint8_t *ubyte, int32_t len, uint8_t *uHexChar) {
-    for (int8_t i = 0; i < len; i++) {
-        bytetoHexChar(ubyte[i], (uint8_t*) &uHexChar[i * 2]);
-    }
+	for (int8_t i = 0; i < len; i++) {
+		bytetoHexChar(ubyte[i], (uint8_t*) &uHexChar[i * 2]);
+	}
 }
 
 void hexChartoByte(uint8_t *uHexChar, uint8_t *ubyte) {
+	*ubyte = 0;
+	*ubyte = ((uHexChar[0] <= '9' && uHexChar[0] >= '0') ? ((uHexChar[0] - '0') << 4) : *ubyte);
+	*ubyte = ((uHexChar[0] <= 'F' && uHexChar[0] >= 'A') ? ((uHexChar[0] - 'A' + 10) << 4) : *ubyte);
 
-    *ubyte = 0;
-    *ubyte = ((uHexChar[0] <= '9' && uHexChar[0] >= '0') ? ((uHexChar[0] - '0') << 4) : *ubyte);
-    *ubyte = ((uHexChar[0] <= 'F' && uHexChar[0] >= 'A') ? ((uHexChar[0] - 'A' + 10) << 4) : *ubyte);
-
-    *ubyte = ((uHexChar[1] <= '9' && uHexChar[1] >= '0') ? *ubyte | (uHexChar[1] - '0') : *ubyte);
-    *ubyte = ((uHexChar[1] <= 'F' && uHexChar[1] >= 'A') ? *ubyte | ((uHexChar[1] - 'A') + 10) : *ubyte);
-
+	*ubyte = ((uHexChar[1] <= '9' && uHexChar[1] >= '0') ? *ubyte | (uHexChar[1] - '0') : *ubyte);
+	*ubyte = ((uHexChar[1] <= 'F' && uHexChar[1] >= 'A') ? *ubyte | ((uHexChar[1] - 'A') + 10) : *ubyte);
 }
 
 void hexCharsToBytes(uint8_t *uHexChar, int32_t len, uint8_t *ubyte) {
-    for (int8_t i = 0; i < len; i += 2) {
-        hexChartoByte((uint8_t*) &uHexChar[i], (uint8_t *) &ubyte[i / 2]);
-    }
+	for (int8_t i = 0; i < len; i += 2) {
+		hexChartoByte((uint8_t*) &uHexChar[i], (uint8_t *) &ubyte[i / 2]);
+	}
 }
 
 String convertToString(char* a, int size) {
-  String s = a;
-  return s;
+	String s = a;
+	return s;
 }
 
 /* Biến chứa địa chỉ IEEE ADDR của Coordinator */
@@ -104,19 +102,19 @@ int zb_znp::zigbee_message_handler(zigbee_msg_t& zigbee_msg) {
 	}
 		break;
 
-  case UTIL_GET_DEVICE_INFO_RESPONSE: {
-    Serial.println("UTIL_GET_DEVICE_INFO_RESPONSE");
-    bytestoHexChars(&zigbee_msg.data[1], 8, (uint8_t*)zc_ieee_addr);
-    Serial.println(zc_ieee_addr);
-  }
-    break;
+	case UTIL_GET_DEVICE_INFO_RESPONSE: {
+		Serial.println("UTIL_GET_DEVICE_INFO_RESPONSE");
+		bytestoHexChars(&zigbee_msg.data[1], 8, (uint8_t*)zc_ieee_addr);
+		Serial.println(zc_ieee_addr);
+	}
+		break;
 
-  case ZDO_BIND_RSP: {
-    Serial.print("ZDO_BIND_RSP: ");
-    Serial.println(zigbee_msg.data[2]);
-  }
-    break;
-  
+	case ZDO_BIND_RSP: {
+		Serial.print("ZDO_BIND_RSP: ");
+		Serial.println(zigbee_msg.data[2]);
+	}
+		break;
+
 	case AF_DATA_REQUEST_IND: {
 		Serial.println("AF_DATA_REQUEST_IND");
 		//uint8_t* status = (uint8_t*)zigbee_msg.data;
@@ -228,14 +226,14 @@ int zb_znp::zigbee_message_handler(zigbee_msg_t& zigbee_msg) {
 		Serial.print("\textAddr: ");
 		for (int i = 0 ; i < Z_EXTADDR_LEN ; i++) {
 			Serial.print(ZDO_DeviceAnnce->extAddr[i], HEX);
-      control_switch_ieee[i] = ZDO_DeviceAnnce->extAddr[i];
+			control_switch_ieee[i] = ZDO_DeviceAnnce->extAddr[i];
 		}
 
-    Serial.println("");
-    bytestoHexChars(control_switch_ieee, 8, (uint8_t*)zr_ieee_addr);
-    Serial.print("extAddr: ");
-    Serial.println(zr_ieee_addr);
-   
+		Serial.println("");
+		bytestoHexChars(control_switch_ieee, 8, (uint8_t*)zr_ieee_addr);
+		Serial.print("extAddr: ");
+		Serial.println(zr_ieee_addr);
+
 		Serial.print("\n");
 		/***
 		 * Specifies the MAC capabilities of the device.
@@ -282,7 +280,7 @@ void loop() {
 		serial_cmd = Serial.read();
 
 		switch(serial_cmd) {
-			/* Cấu hình lại coodinator, đưa các cáu hình về mặc định.
+		/* Cấu hình lại coodinator, đưa các cáu hình về mặc định.
 			 * Chú ý: list thiết bị đã tham gia vào mạng trước đó sẽ bị mất */
 		case '0': {
 			Serial.println("\nstart_coordinator(1)");
@@ -366,28 +364,28 @@ void loop() {
 			break;
 			********************************************************************/
 
-   /* Get Coordinator IEEE ADDR */
-   case '4': {
-      zigbee_network.util_get_device_info();
-   }
-    break;
+			/* Get Coordinator IEEE ADDR */
+		case '4': {
+			zigbee_network.util_get_device_info();
+		}
+			break;
 
-   /* Send Binding request */
-   case '5': {
-      binding_req_t binding;
-         
-      hexCharsToBytes((uint8_t*)convertToString((char*)zc_ieee_addr, 16).c_str(), 16, binding.dst_address);
-      hexCharsToBytes((uint8_t*)convertToString((char*)zr_ieee_addr, 16).c_str(), 16, binding.src_ieee_addr);
-      memcpy(binding.src_short_addr, (uint8_t*)&control_switch_address, 2);
-      
-      binding.dst_mode     = 3;                              /* default mode */
-      binding.cluster_id   = ZCL_CLUSTER_ID_GEN_ON_OFF;      /* clusster want to binding */
-      binding.src_endpoint = 1;                              /* endpoint device want to binding */
-      binding.dst_endpoint = 1;                              /* endpoint coodinator want to binding */
-      zigbee_network.zdo_binding_req(binding);
-    }
-    break;
-    
+			/* Send Binding request */
+		case '5': {
+			binding_req_t binding;
+
+			hexCharsToBytes((uint8_t*)convertToString((char*)zc_ieee_addr, 16).c_str(), 16, binding.dst_address);
+			hexCharsToBytes((uint8_t*)convertToString((char*)zr_ieee_addr, 16).c_str(), 16, binding.src_ieee_addr);
+			memcpy(binding.src_short_addr, (uint8_t*)&control_switch_address, 2);
+
+			binding.dst_mode     = 3;                              /* default mode */
+			binding.cluster_id   = ZCL_CLUSTER_ID_GEN_ON_OFF;      /* clusster want to binding */
+			binding.src_endpoint = 1;                              /* endpoint device want to binding */
+			binding.dst_endpoint = 1;                              /* endpoint coodinator want to binding */
+			zigbee_network.zdo_binding_req(binding);
+		}
+			break;
+
 		default:
 			break;
 		}
